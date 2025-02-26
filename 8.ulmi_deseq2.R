@@ -1127,3 +1127,257 @@ head(df_int,n=20)
 dim(df_int)
 write.table(df_int,file="upset_intersections.txt",sep="\t",row.names = FALSE, col.names = TRUE,quote=FALSE)
 
+
+
+################################################################################################
+##########  5. A. Time-course of MDV1 LOCAL                              ##########
+
+attach(local)
+mdv1.l<-as.data.frame(cbind(MDV1.1_C_L_6, MDV1.3_C_L_6, MDV1.36_C_L_6, MDV1.47_C_L_6,
+                            MDV1.4_C_L_24,MDV1.20_C_L_24,MDV1.22_C_L_24,MDV1.43_C_L_24,
+                            MDV1.2_C_L_72,MDV1.11_C_L_72,MDV1.34_C_L_72,MDV1.42_C_L_72,
+                            MDV1.8_C_L_144,MDV1.21_C_L_144,MDV1.37_C_L_144,MDV1.39_C_L_144,
+                            MDV1.13_O_L_6, MDV1.15_O_L_6, MDV1.23_O_L_6, MDV1.50_O_L_6,
+                            MDV1.16_O_L_24, MDV1.33_O_L_24,MDV1.41_O_L_24,MDV1.44_O_L_24,
+                            MDV1.18_O_L_72,MDV1.31_O_L_72,MDV1.46_O_L_72,MDV1.49_O_L_72,
+                            MDV1.9_O_L_144,MDV1.12_O_L_144,MDV1.24_O_L_144,MDV1.45_O_L_144))
+detach()
+rownames(mdv1.l)<-rownames(local)
+
+coldata.mdv1.l<-c("MDV1.1","MDV1.3","MDV1.36","MDV1.47","MDV1.4","MDV1.20","MDV1.22","MDV1.43",
+                  "MDV1.2","MDV1.11","MDV1.34","MDV1.42","MDV1.8","MDV1.21","MDV1.37","MDV1.39",
+                  "MDV1.13","MDV1.15","MDV1.23","MDV1.50","MDV1.16","MDV1.33","MDV1.41","MDV1.44",
+                  "MDV1.18","MDV1.31","MDV1.46","MDV1.49","MDV1.9","MDV1.12","MDV1.24","MDV1.45",
+                  "control","control","control","control","control","control","control","control",
+                  "control","control","control","control","control","control","control","control",
+                  "infected","infected","infected","infected","infected","infected","infected","infected",
+                  "infected","infected","infected","infected","infected","infected","infected","infected",
+                  "6 hpi","6 hpi","6 hpi","6 hpi","24 hpi","24 hpi","24 hpi","24 hpi",
+                  "72 hpi","72 hpi","72 hpi","72 hpi","144 hpi","144 hpi","144 hpi","144 hpi",
+                  "6 hpi","6 hpi","6 hpi","6 hpi","24 hpi","24 hpi","24 hpi","24 hpi",
+                  "72 hpi","72 hpi","72 hpi","72 hpi","144 hpi","144 hpi","144 hpi","144 hpi",
+                  "control - 006 hpi","control - 006 hpi","control - 006 hpi","control - 006 hpi","control - 024 hpi","control - 024 hpi","control - 024 hpi","control - 024 hpi",
+                  "control - 072 hpi","control - 072 hpi","control - 072 hpi","control - 072 hpi","control - 144 hpi","control - 144 hpi","control - 144 hpi","control - 144 hpi",
+                  "infected - 006 hpi","infected - 006 hpi","infected - 006 hpi","infected - 006 hpi","infected - 024 hpi","infected - 024 hpi","infected - 024 hpi","infected - 024 hpi",
+                  "infected - 072 hpi","infected - 072 hpi","infected - 072 hpi","infected - 072 hpi","infected - 144 hpi","infected - 144 hpi","infected - 144 hpi","infected - 144 hpi")
+coldata.mdv1.l<-matrix(coldata.mdv1.l,nrow=32,ncol=4,byrow=FALSE)
+rownames(coldata.mdv1.l)<-colnames(mdv1.l)
+colnames(coldata.mdv1.l)<-c("SAMPLE","TREATMENT","TIME","TREAT.TIME")
+
+dds.mdv1.l <- DESeqDataSetFromMatrix(countData = mdv1.l,
+                                     colData = coldata.mdv1.l,
+                                     design = ~ TIME + TREATMENT + TIME:TREATMENT)
+
+t_data.mdv1.l<-vst(dds.mdv1.l)
+head(assay(t_data.mdv1.l))
+distances.mdv1.l<-dist(t(assay(t_data.mdv1.l)))
+distances_matrix.mdv1.l<-as.matrix(distances.mdv1.l)
+rownames(distances_matrix.mdv1.l)<-paste(t_data.mdv1.l$SAMPLE)
+col<-colorRampPalette( rev(brewer.pal(9,"Blues")) )(255)
+hc.mdv1.l<-hclust(distances.mdv1.l)
+heatmap.2(distances_matrix.mdv1.l,Rowv = as.dendrogram(hc.mdv1.l),
+          symm=TRUE,trace = "none",col = col,
+          margins=c(2,10),labCol = FALSE,
+          key.title = "Color Key and Histogram",keysize = 1.5)
+
+pcaData.mdv1.l <- plotPCA(t_data.mdv1.l, intgroup=c("TIME", "TREATMENT"), returnData=TRUE)
+percentVar.mdv1.l <- round(100 * attr(pcaData.mdv1.l, "percentVar"))
+pca.mdv1.l<-ggplot(pcaData.mdv1.l, aes(PC1, PC2, color=TREATMENT, shape=TIME)) +
+  xlab(paste0("PC1: ",percentVar.mdv1.l[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar.mdv1.l[2],"% variance")) + 
+  geom_point(size=3) + # guides(color = FALSE, shape = FALSE) +
+  theme_bw() + labs(title="(a)") + 
+  xlim(-18, 18) + ylim(-18, 18) +
+  theme(axis.title = element_text(size = 15)) + 
+  theme(legend.title=element_text(size=13), 
+        legend.text=element_text(size=12)) +
+  theme(axis.text=element_text(size=15),title = element_text(size = 15)) +
+  coord_fixed()
+
+dds.mdv1.l<-DESeq(dds.mdv1.l,test = "LRT", 
+                  reduced = ~ TIME + TREATMENT)
+res.mdv1.l<-results(dds.mdv1.l)
+res.mdv1.l
+resOrdered.mdv1.l <- res.mdv1.l[order(res.mdv1.l$pvalue),]
+summary(res.mdv1.l)
+sum(res.mdv1.l$padj < 0.1, na.rm=TRUE)
+
+res05.mdv1.l <- results(dds.mdv1.l, alpha=0.05)
+summary(res05.mdv1.l)
+sum(res05.mdv1.l$padj < 0.05, na.rm=TRUE)
+
+res01.mdv1.l <- results(dds.mdv1.l, alpha=0.01)
+summary(res01.mdv1.l)
+sum(res01.mdv1.l$padj < 0.01, na.rm=TRUE)
+
+resSig05.mdv1.l = subset(res05.mdv1.l, padj<0.05)
+print(resSig05.mdv1.l)
+write.table(resSig05.mdv1.l,file="resSig05.mdv1.local.txt")
+
+
+
+################################################################################################
+##########  5. B. Time-course of MDV2.3 LOCAL                              ##########
+
+attach(local)
+mdv2.3.l<-as.data.frame(cbind(MDV2.3.8_C_L_6, MDV2.3.24_C_L_6, MDV2.3.29_C_L_6, MDV2.3.38_C_L_6,
+                              MDV2.3.5_C_L_24,MDV2.3.6_C_L_24,MDV2.3.7_C_L_24,MDV2.3.43_C_L_24,
+                              MDV2.3.3_C_L_72,MDV2.3.11_C_L_72,MDV2.3.41_C_L_72,MDV2.3.47_C_L_72,
+                              MDV2.3.10_C_L_144,MDV2.3.27_C_L_144,MDV2.3.40_C_L_144,MDV2.3.42_C_L_144,
+                              MDV2.3.18_O_L_6, MDV2.3.21_O_L_6, MDV2.3.33_O_L_6, MDV2.3.49_O_L_6,
+                              MDV2.3.13_O_L_24, MDV2.3.17_O_L_24,MDV2.3.30_O_L_24,MDV2.3.45_O_L_24,
+                              MDV2.3.15_O_L_72,MDV2.3.28_O_L_72,MDV2.3.32_O_L_72,MDV2.3.44_O_L_72,
+                              MDV2.3.19_O_L_144,MDV2.3.26_O_L_144,MDV2.3.46_O_L_144,MDV2.3.50_O_L_144))
+detach()
+rownames(mdv2.3.l)<-rownames(local)
+coldata.mdv2.3.l<-c("MDV2.3.8","MDV2.3.24","MDV2.3.29","MDV2.3.38","MDV2.3.5","MDV2.3.6","MDV2.3.7","MDV2.3.43",
+                    "MDV2.3.3","MDV2.3.11","MDV2.3.41","MDV2.3.47","MDV2.3.10","MDV2.3.27","MDV2.3.40","MDV2.3.42",
+                    "MDV2.3.18","MDV2.3.21","MDV2.3.33","MDV2.3.49","MDV2.3.13","MDV2.3.17","MDV2.3.30","MDV2.3.45",
+                    "MDV2.3.15","MDV2.3.28","MDV2.3.32","MDV2.3.44","MDV2.3.19","MDV2.3.26","MDV2.3.46","MDV2.3.50",
+                    "control","control","control","control","control","control","control","control","control","control","control","control","control","control","control","control",
+                    "infected","infected","infected","infected","infected","infected","infected","infected","infected","infected","infected","infected","infected","infected","infected","infected",
+                    "6 hpi","6 hpi","6 hpi","6 hpi","24 hpi","24 hpi","24 hpi","24 hpi","72 hpi","72 hpi","72 hpi","72 hpi","144 hpi","144 hpi","144 hpi","144 hpi",
+                    "6 hpi","6 hpi","6 hpi","6 hpi","24 hpi","24 hpi","24 hpi","24 hpi","72 hpi","72 hpi","72 hpi","72 hpi","144 hpi","144 hpi","144 hpi","144 hpi",
+                    "control - 006 hpi","control - 006 hpi","control - 006 hpi","control - 006 hpi","control - 024 hpi","control - 024 hpi","control - 024 hpi","control - 024 hpi",
+                    "control - 072 hpi","control - 072 hpi","control - 072 hpi","control - 072 hpi","control - 144 hpi","control - 144 hpi","control - 144 hpi","control - 144 hpi",
+                    "infected - 006 hpi","infected - 006 hpi","infected - 006 hpi","infected - 006 hpi","infected - 024 hpi","infected - 024 hpi","infected - 024 hpi","infected - 024 hpi",
+                    "infected - 072 hpi","infected - 072 hpi","infected - 072 hpi","infected - 072 hpi","infected - 144 hpi","infected - 144 hpi","infected - 144 hpi","infected - 144 hpi")
+
+coldata.mdv2.3.l<-matrix(coldata.mdv2.3.l,nrow=32,ncol=4,byrow=FALSE)
+rownames(coldata.mdv2.3.l)<-colnames(mdv2.3.l)
+colnames(coldata.mdv2.3.l)<-c("SAMPLE","TREATMENT","TIME","TREAT.TIME")
+
+dds.mdv2.3.l <- DESeqDataSetFromMatrix(countData = mdv2.3.l,
+                                       colData = coldata.mdv2.3.l,
+                                       design = ~ TIME + TREATMENT + TIME:TREATMENT)
+t_data.mdv2.3.l<-vst(dds.mdv2.3.l)
+head(assay(t_data.mdv2.3.l))
+distances.mdv2.3.l<-dist(t(assay(t_data.mdv2.3.l)))
+distances_matrix.mdv2.3.l<-as.matrix(distances.mdv2.3.l)
+rownames(distances_matrix.mdv2.3.l)<-paste(t_data.mdv2.3.l$SAMPLE)
+col<-colorRampPalette( rev(brewer.pal(9,"Blues")) )(255)
+hc.mdv2.3.l<-hclust(distances.mdv2.3.l)
+heatmap.2(distances_matrix.mdv2.3.l,Rowv = as.dendrogram(hc.mdv2.3.l),
+          symm=TRUE,trace = "none",col = col,
+          margins=c(2,10),labCol = FALSE)
+pcaData.mdv2.3.l <- plotPCA(t_data.mdv2.3.l, intgroup=c("TIME", "TREATMENT"), returnData=TRUE)
+percentVar.mdv2.3.l <- round(100 * attr(pcaData.mdv2.3.l, "percentVar"))
+pca.madv2.3.l<-ggplot(pcaData.mdv2.3.l, aes(PC1, PC2, color=TREATMENT, shape=TIME)) +
+  xlab(paste0("PC1: ",percentVar.mdv2.3.l[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar.mdv2.3.l[2],"% variance")) + 
+  geom_point(size=3) + # guides(color = FALSE, shape = FALSE) +
+  theme_bw() + labs(title="(b)") + 
+  xlim(-18, 18) + ylim(-18, 18) +
+  theme(axis.title = element_text(size = 15)) + 
+  theme(legend.title=element_text(size=13), 
+        legend.text=element_text(size=12)) +
+  theme(axis.text=element_text(size=15),title = element_text(size = 15)) +
+  coord_fixed()
+
+dds.mdv2.3.l<-DESeq(dds.mdv2.3.l,test = "LRT", 
+                    reduced = ~ TIME + TREATMENT)
+res.mdv2.3.l<-results(dds.mdv2.3.l)
+res.mdv2.3.l
+resOrdered.mdv2.3.l <- res.mdv2.3.l[order(res.mdv2.3.l$pvalue),]
+summary(res.mdv2.3.l)
+sum(res.mdv2.3.l$padj < 0.1, na.rm=TRUE)
+
+res05.mdv2.3.l <- results(dds.mdv2.3.l, alpha=0.05)
+summary(res05.mdv2.3.l)
+sum(res05.mdv2.3.l$padj < 0.05, na.rm=TRUE)
+
+res01.mdv2.3.l <- results(dds.mdv2.3.l, alpha=0.01)
+summary(res01.mdv2.3.l)
+sum(res01.mdv2.3.l$padj < 0.01, na.rm=TRUE)
+
+resSig05.mdv2.3.l = subset(res05.mdv2.3.l, padj<0.05)
+print(resSig05.mdv2.3.l)
+write.table(resSig05.mdv2.3.l,file="resSig05.mdv2.3.local.txt")
+
+
+
+
+
+################################################################################################
+##########  5. C. Time-course of VAD2 LOCAL                             ##########
+
+attach(local)
+vad2.l<-as.data.frame(cbind(VAD2.4_C_L_6, VAD2.6_C_L_6, VAD2.7_C_L_6, VAD2.37_C_L_6,
+                            VAD2.1_C_L_24,VAD2.11_C_L_24,VAD2.19_C_L_24,VAD2.42_C_L_24,
+                            VAD2.2_C_L_72,VAD2.9_C_L_72,VAD2.27_C_L_72,VAD2.41_C_L_72,
+                            VAD2.8_C_L_144,VAD2.36_C_L_144,VAD2.40_C_L_144,VAD2.43_C_L_144,
+                            VAD2.14_O_L_6, VAD2.15_O_L_6, VAD2.29_O_L_6, VAD2.44_O_L_6,
+                            VAD2.25_O_L_24, VAD2.26_O_L_24,VAD2.28_O_L_24,VAD2.45_O_L_24,
+                            VAD2.17_O_L_72,VAD2.22_O_L_72,VAD2.33_O_L_72,VAD2.48_O_L_72,
+                            VAD2.18_O_L_144,VAD2.23_O_L_144,VAD2.35_O_L_144,VAD2.47_O_L_144))
+detach()
+rownames(vad2.l)<-rownames(local)
+coldata.vad2.l<-c("VAD2.4","VAD2.6","VAD2.7","VAD2.37","VAD2.1","VAD2.11","VAD2.19","VAD2.42",
+                  "VAD2.2","VAD2.9","VAD2.27","VAD2.41","VAD2.8","VAD2.36","VAD2.40","VAD2.43",
+                  "VAD2.14","VAD2.15","VAD2.29","VAD2.44","VAD2.25","VAD2.26","VAD2.28","VAD2.45",
+                  "VAD2.17","VAD2.22","VAD2.33","VAD2.48","VAD2.18","VAD2.23","VAD2.35","VAD2.47",
+                  "control","control","control","control","control","control","control","control","control","control","control","control","control","control","control","control",
+                  "infected","infected","infected","infected","infected","infected","infected","infected","infected","infected","infected","infected","infected","infected","infected","infected",
+                  "6 hpi","6 hpi","6 hpi","6 hpi","24 hpi","24 hpi","24 hpi","24 hpi","72 hpi","72 hpi","72 hpi","72 hpi","144 hpi","144 hpi","144 hpi","144 hpi",
+                  "6 hpi","6 hpi","6 hpi","6 hpi","24 hpi","24 hpi","24 hpi","24 hpi","72 hpi","72 hpi","72 hpi","72 hpi","144 hpi","144 hpi","144 hpi","144 hpi",
+                  "control - 006 hpi","control - 006 hpi","control - 006 hpi","control - 006 hpi","control - 024 hpi","control - 024 hpi","control - 024 hpi","control - 024 hpi",
+                  "control - 072 hpi","control - 072 hpi","control - 072 hpi","control - 072 hpi","control - 144 hpi","control - 144 hpi","control - 144 hpi","control - 144 hpi",
+                  "infected - 006 hpi","infected - 006 hpi","infected - 006 hpi","infected - 006 hpi","infected - 024 hpi","infected - 024 hpi","infected - 024 hpi","infected - 024 hpi",
+                  "infected - 072 hpi","infected - 072 hpi","infected - 072 hpi","infected - 072 hpi","infected - 144 hpi","infected - 144 hpi","infected - 144 hpi","infected - 144 hpi")
+
+coldata.vad2.l<-matrix(coldata.vad2.l,nrow=32,ncol=4,byrow=FALSE)
+rownames(coldata.vad2.l)<-colnames(vad2.l)
+colnames(coldata.vad2.l)<-c("SAMPLE","TREATMENT","TIME","TREAT.TIME")
+
+dds.vad2.l <- DESeqDataSetFromMatrix(countData = vad2.l,
+                                     colData = coldata.vad2.l,
+                                     design = ~ TIME + TREATMENT + TIME:TREATMENT)
+t_data.vad2.l<-vst(dds.vad2.l)
+head(assay(t_data.vad2.l))
+distances.vad2.l<-dist(t(assay(t_data.vad2.l)))
+distances_matrix.vad2.l<-as.matrix(distances.vad2.l)
+rownames(distances_matrix.vad2.l)<-paste(t_data.vad2.l$SAMPLE)
+col<-colorRampPalette( rev(brewer.pal(9,"Blues")) )(255)
+hc.vad2.l<-hclust(distances.vad2.l)
+heatmap.2(distances_matrix.vad2.l,Rowv = as.dendrogram(hc.vad2.l),
+          symm=TRUE,trace = "none",col = col,
+          margins=c(2,10),labCol = FALSE)
+pcaData.vad2.l <- plotPCA(t_data.vad2.l, intgroup=c("TREATMENT", "TIME"), returnData=TRUE)
+percentVar.vad2.l <- round(100 * attr(pcaData.vad2.l, "percentVar"))
+
+pca.vad2.l<-ggplot(pcaData.vad2.l, aes(PC1, PC2, color=TREATMENT, shape=TIME)) +
+  xlab(paste0("PC1: ",percentVar.vad2.l[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar.vad2.l[2],"% variance")) + 
+  geom_point(size=3) + # guides(color = FALSE, shape = FALSE) +
+  theme_bw() + labs(title="(c)") + 
+  xlim(-18, 18) + ylim(-18, 18) +
+  theme(axis.title = element_text(size = 15)) + 
+  theme(legend.title=element_text(size=13), 
+        legend.text=element_text(size=12)) +
+  theme(axis.text=element_text(size=15),title = element_text(size = 15)) +
+  coord_fixed() #+ scale_fill_discrete(breaks=c('6 hpi', '24 hpi', '72 hpi', "144 hpi"))
+
+dds.vad2.l<-DESeq(dds.vad2.l,test = "LRT",
+                  reduced = ~ TIME + TREATMENT)
+res.vad2.l<-results(dds.vad2.l)
+res.vad2.l
+resOrdered.vad2.l <- res.vad2.l[order(res.vad2.l$pvalue),]
+summary(res.vad2.l)
+sum(res.vad2.l$padj < 0.1, na.rm=TRUE)
+
+res05.vad2.l <- results(dds.vad2.l, alpha=0.05)
+summary(res05.vad2.l)
+sum(res05.vad2.l$padj < 0.05, na.rm=TRUE)
+
+res01.vad2.l <- results(dds.vad2.l, alpha=0.01)
+summary(res01.vad2.l)
+sum(res01.vad2.l$padj < 0.01, na.rm=TRUE)
+
+resSig05.vad2.l = subset(res05.vad2.l, padj<0.05)
+print(resSig05.vad2.l)
+write.table(resSig05.vad2.l,file="resSig05.vad2.local.txt",sep="\t",dec=".")
+
+
+tiff(file="ulmi.sci.data.supp.figure.s1.pcas.tiff",width=16,height=6,units="in",res=300)
+grid.arrange(pca.mdv1.l, pca.madv2.3.l, pca.vad2.l,nrow = 1)
+dev.off()
