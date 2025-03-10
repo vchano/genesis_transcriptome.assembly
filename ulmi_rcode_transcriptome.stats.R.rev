@@ -1,6 +1,6 @@
 # Load fasta files
 fasta_file1 <- "/home/uni01/UFFF/chano/ULMI/ULMI.GEA/ULMI.LOCAL/ulmi_preliminary_assembly_74593.fasta"
-fasta_file2 <- "/home/uni01/UFFF/chano/ULMI/ULMI.GEA/ULMI.LOCAL/ulmi_final_assembly_51904.fasta"
+fasta_file2 <- "/home/uni01/UFFF/chano/ULMI/ULMI.GEA/ULMI.LOCAL/ulmi_final_assembly_51507.fasta"
 
 library(seqinr)
 
