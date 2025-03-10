@@ -135,8 +135,8 @@ Trinity --seqType fq --max_memory 192G --CPU 24 --single $GENESIS/ALIGN/454/FAST
 ## METASSEMBLY
 Trinity --seqType fa --max_memory 192G --CPU 24 --single $GENESIS/ALIGN/454/TRINITY_all/Trinity.fasta,$GENESIS/ALIGN/MDV1/TRINITY/Trinity.fasta,$GENESIS/ALIGN/MDV23/TRINITY/Trinity.fasta,$GENESIS/ALIGN/VAD2/TRINITY/Trinity.fasta --output $GENESIS/ALIGN/TRINITY_FINAL_TRANSCRIPTOME/
 
-
-
+# REDUCE BY USING PERL SCRIPT FROM TRINITY
+perl /home/azken/Documentos/Miniconda3/envs/trinity/opt/trinity-2.8.4/util/misc/get_longest_isoform_seq_per_trinity_gene.pl Trinity2.fasta > ulmi_unigenes.fasta
 
 
 
